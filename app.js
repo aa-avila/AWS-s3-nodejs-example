@@ -1,5 +1,6 @@
 const express = require('express');
 const morgan = require('morgan');
+const path = require('path');
 require('dotenv').config();
 
 /*********************/
@@ -20,7 +21,7 @@ app.use(express.json());
 /*********************/
 // ROUTES
 app.get('/', (req, res) => {
-    res.send('Hola!');
+    res.sendFile(path.join(__dirname + '/public/index.html'));
 });
 
 
