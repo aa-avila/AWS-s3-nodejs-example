@@ -7,8 +7,8 @@
     <title>AWS S3 Example</title>
 </head>
 <body>
-    <form action="/upload" method="post">
-        <input type="file" id="myFile" name="filename">
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="image">
         <input type="submit">
       </form>
 </body>
