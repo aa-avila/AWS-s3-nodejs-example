@@ -14,7 +14,7 @@ const bucketName = process.env.AWS_BUCKET
 const s3 = new AWS.S3();
 
 
-// Upload file
+/** Upload file **************/
 const uploadFile = (file) => {
     const fileStream = fs.createReadStream(file.path)
 
@@ -27,7 +27,17 @@ const uploadFile = (file) => {
     return s3.upload(uploadParams).promise();
 }
 
-// exports.uploadFile = uploadFile;
+/** Download file **************/
+const getFileStream = (key) => {
+    const downloadParams = {
+        Key: key,
+        Bucket: bucketName
+    }
+
+    return s3.getObject(downloadParams).createReadStream();
+}
+
 module.exports = {
-    uploadFile
+    uploadFile,
+    getFileStream
 }

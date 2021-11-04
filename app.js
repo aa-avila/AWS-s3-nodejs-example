@@ -3,10 +3,14 @@ const morgan = require('morgan');
 const path = require('path');
 require('dotenv').config();
 
-const multer = require('multer'); //<- Libreria middleware para manejo facil de subida de archivos
+const multer = require('multer'); //<- Libreria middleware para manejo de subida de archivos: https://www.npmjs.com/package/multer
 const upload = multer({ dest: 'uploads/' }); //<- carpeta para guardar temporalmente el archivo
 
-const s3FileService = require('./services/aws_s3');
+const fs = require('fs'); //<- para interactuar con filsystem
+const util = require('util');
+const unlinkFile = util.promisify(fs.unlink); //<- eliminar archivos
+
+const s3FileService = require('./services/aws_s3'); //<- SERVICIO SUBIDA/BAJADA DE ARCHIVOS A AWS S3
 
 /*********************/
 // EXPRESS APP
@@ -17,7 +21,6 @@ const customPort = process.env.CUSTOM_PORT;
 const PORT = process.env.PORT || customPort;
 app.set('port', PORT);
 
-/*********************/
 // MIDDLEWARES
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: false }));
@@ -25,13 +28,16 @@ app.use(express.json());
 
 /*********************/
 // ROUTES
+// Form subida
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname + '/public/index.html'));
 });
 
+
+// UPLOAD Post
 app.post('/upload', upload.single('image'), async (req, res) => {
-    const file = req.file; //<- info acerca del archivo
-    const body = req.body; //<- body normal
+    const file = req.file; //<- archivo
+    //const body = req.body; //<- body normal
     //console.log(file);
     //console.log(body);
 
@@ -48,8 +54,19 @@ app.post('/upload', upload.single('image'), async (req, res) => {
         Bucket: 'cohorte-septiembre-91ddd87b'
     }
      */
-    
-    res.send('ok');
+
+    await unlinkFile(file.path); //<- borra el archivo temporal de /uploads
+
+    res.send({ imageKey: result.Key, imageLocation: result.Location }); //<- devuelve Key y ruta absoluta del archivo subido
+});
+
+// DOWNLOAD
+app.get('/images/:key', async (req, res) => {
+    const key = req.params.key;
+
+    const readStream = s3FileService.getFileStream(key);
+
+    readStream.pipe(res);
 });
 
 
